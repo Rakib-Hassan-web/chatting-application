@@ -1,5 +1,8 @@
 const express = require("express");
+const { add_Friend } = require("../controllers/conController");
 
-const route = express.Router();
+const routee = express.Router();
 
-module.exports = route;
+routee.post("/addfriend" ,add_Friend)
+
+module.exports = routee;
