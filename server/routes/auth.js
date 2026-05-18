@@ -1,5 +1,11 @@
 const express = require("express");
 
-const route = express.Router();
+const { Registration, Login } = require("../controllers/authcontroller");
 
-module.exports = route;
+const routee = express.Router();
+
+routee.post("/register" , Registration)
+routee.post("/login" , Login)
+
+
+module.exports = routee;
