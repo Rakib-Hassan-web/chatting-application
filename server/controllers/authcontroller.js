@@ -50,7 +50,7 @@ const Login = async (req, res) => {
     return sendSuccess(
       res,
       'Login successful',
-      { user: { _id: userData._id, email: userData.email, userName: userData.userName } },
+      { user: { _id: userData._id, email: userData.email, userName: userData.userName }, accessToken: accToken },
       200,
     )
   } catch (error) {

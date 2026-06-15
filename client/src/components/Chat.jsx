@@ -10,7 +10,7 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:8000'
 
 export default function Chat() {
   const { id, type } = useParams()
-  const { user } = useAuth()
+  const { user, token: contextToken } = useAuth()
   const [messages, setMessages] = useState([])
   const socketRef = useRef(null)
 
@@ -20,7 +20,16 @@ export default function Chat() {
       if (!id) return
       try {
         const res = await getMessages(id)
-        setMessages(res.data.data || [])
+        const raw = res.data.data || []
+        const normalized = raw.map((m) => ({
+          id: m._id || m.id,
+          text: m.content || m.text || '',
+          createdAt: m.createdAt || m.createdAt,
+          sender: (m.sender && (m.sender.userName || m.sender.email)) || m.sender || 'Unknown',
+          senderId: m.sender && m.sender._id ? m.sender._id : m.senderId || null,
+          conversation: m.conversation || id,
+        }))
+        setMessages(normalized)
       } catch (err) {
         // ignore missing endpoint
       }
@@ -30,7 +39,9 @@ export default function Chat() {
 
   useEffect(() => {
     if (!id) return
-    socketRef.current = io(SERVER_URL, { transports: ['websocket', 'polling'], withCredentials: true })
+    const token = contextToken || user?.accessToken || user?.token || (typeof window !== 'undefined' && window.__ACCESS_TOKEN__) || (typeof window !== 'undefined' && localStorage.getItem('accessToken')) || null
+    const auth = token ? { token } : undefined
+    socketRef.current = io(SERVER_URL, { transports: ['websocket', 'polling'], withCredentials: true, auth })
 
     socketRef.current.on('connect', () => {
       socketRef.current.emit('join', { room: id })
@@ -76,7 +87,7 @@ export default function Chat() {
   return (
     <div className="chat-container">
       <header className="chat-header">{type === 'group' ? 'Group' : 'Direct Message'}</header>
-      <MessageList messages={messages} />
+      <MessageList messages={messages} currentUserId={user?._id} />
       <MessageInput onSend={handleSend} />
     </div>
   )

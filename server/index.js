@@ -66,16 +66,12 @@ const io = new Server(server, {
 io.on('connection', (socket) => {
   console.log('socket connected', socket.id)
 
-  socket.on('join', ({ room }) => {
-    if (room) socket.join(room)
-  })
-
-  socket.on('leave', ({ room }) => {
-    if (room) socket.leave(room)
-  })
-
-  socket.on('message', async (msg) => {
+  // identify user from socket auth token (preferred), query, or cookies
+  const getSocketUser = () => {
     try {
+      const token = socket.handshake.auth?.token || socket.handshake.query?.token
+      if (token) return verifyToken(token)
+
       const cookies = socket.handshake.headers.cookie || ''
       const parsed = cookies
         .split(';')
@@ -86,7 +82,24 @@ io.on('connection', (socket) => {
           return acc
         }, {})
       const xs = parsed['XS_TKN']
-      const decoded = xs ? verifyToken(xs) : null
+      if (xs) return verifyToken(xs)
+      return null
+    } catch (err) {
+      return null
+    }
+  }
+
+  socket.on('join', ({ room }) => {
+    if (room) socket.join(room)
+  })
+
+  socket.on('leave', ({ room }) => {
+    if (room) socket.leave(room)
+  })
+
+  socket.on('message', async (msg) => {
+    try {
+      const decoded = getSocketUser()
       const senderId = decoded?._id
       const senderName = decoded?.userName || decoded?.email || msg.sender || 'Anonymous'
 
