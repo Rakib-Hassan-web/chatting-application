@@ -11,14 +11,15 @@ const Registration = async (req, res) => {
     if (!password)   return sendError(res,"password is required" ,400)
 
     const existEmail = await userSchema.findOne({ email });
-    if (existEmail)
-      return sendError(res,"user already exist" ,400)
-    const user = userSchema.create({
+    if (existEmail) return sendError(res, "User already exists", 400)
+
+    const user = await userSchema.create({
       userName,
       email,
       password,
-    });
-    sendSuccess(res,"registration successfull" ,200)
+    })
+
+    return sendSuccess(res, "Registration successful", { user: { _id: user._id, email: user.email, userName: user.userName } }, 201)
   } catch (error) {
     console.log(error);
      sendError(res,"Internal Server Error" ,500)

@@ -22,7 +22,8 @@ const generateRefreshToken = (user) => {
 
 const verifyToken = (token) => {
   try {
-    var decoded = jwt.verify(token, process.env.JWT_SEC);
+    const secret = process.env.JWT_SECRET || process.env.JWT_SEC;
+    var decoded = jwt.verify(token, secret);
     return decoded;
   } catch (err) {
     return null;

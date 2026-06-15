@@ -19,14 +19,14 @@ const add_Friend = async (req, res) => {
         { participent: req.user._id, creator: friend._id },
       ],
     });
-    if (existingParticipent)
-      return sendError(res,"Already in friend list" ,400)  
-    const createNewConv = await conversationSchema.create({
+    if (existingParticipent) return sendError(res, "Already in friend list", 400)
+
+    const createNewConv = await ConversationSchema.create({
       creator: req.user._id,
       participent: friend._id,
-    });
+    })
 
-    sendSuccess(res,"Friend Added successfylly" ,200)  
+    return sendSuccess(res, "Friend added successfully", createNewConv, 201)
   } catch (error) {
       return sendError(res,"server error" ,500)  
 
