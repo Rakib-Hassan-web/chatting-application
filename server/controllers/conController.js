@@ -1,6 +1,9 @@
 const { sendError, sendSuccess } = require("../helpers/responseHandler");
 const ConversationSchema = require("../models/ConversationSchema");
 const userSchema = require("../models/userSchema");
+const Message = require("../models/messageSchema");
+
+
 
 
 
@@ -33,4 +36,40 @@ const add_Friend = async (req, res) => {
   }
 };
 
-module.exports = { add_Friend };
+const getConversations = async (req, res) => {
+  try {
+    const convs = await ConversationSchema.find({
+      $or: [{ creator: req.user._id }, { participent: req.user._id }],
+    })
+      .populate('creator', 'userName email')
+      .populate('participent', 'userName email')
+      .sort({ updatedAt: -1 })
+
+    return sendSuccess(res, 'Conversations fetched', convs, 200)
+  } catch (err) {
+    return sendError(res, 'Server error', 500)
+  }
+}
+
+const getMessages = async (req, res) => {
+  const { id } = req.params
+  try {
+    const msgs = await Message.find({ conversation: id }).populate('sender', 'userName email').sort({ createdAt: 1 })
+    return sendSuccess(res, 'Messages fetched', msgs, 200)
+  } catch (err) {
+    return sendError(res, 'Server error', 500)
+  }
+}
+
+const postMessage = async (req, res) => {
+  const { conversation, content } = req.body
+  if (!conversation || !content) return sendError(res, 'conversation and content required', 400)
+  try {
+    const msg = await Message.create({ content, sender: req.user._id, conversation })
+    return sendSuccess(res, 'Message created', msg, 201)
+  } catch (err) {
+    return sendError(res, 'Server error', 500)
+  }
+}
+
+module.exports = { add_Friend, getConversations, getMessages, postMessage };

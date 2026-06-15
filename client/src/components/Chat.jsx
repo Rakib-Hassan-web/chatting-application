@@ -4,11 +4,13 @@ import { useParams } from 'react-router-dom'
 import MessageList from './MessageList'
 import MessageInput from './MessageInput'
 import { getMessages, sendMessage as sendMessageApi } from '../api'
+import { useAuth } from '../context/AuthContext'
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:8000'
 
 export default function Chat() {
   const { id, type } = useParams()
+  const { user } = useAuth()
   const [messages, setMessages] = useState([])
   const socketRef = useRef(null)
 
@@ -28,13 +30,13 @@ export default function Chat() {
 
   useEffect(() => {
     if (!id) return
-    socketRef.current = io(SERVER_URL, { transports: ['websocket'] })
+    socketRef.current = io(SERVER_URL, { transports: ['websocket', 'polling'], withCredentials: true })
+
     socketRef.current.on('connect', () => {
       socketRef.current.emit('join', { room: id })
     })
 
     socketRef.current.on('message', (msg) => {
-      // only accept messages for this room
       if (!msg || (msg.conversation && msg.conversation !== id)) return
       setMessages((prev) => [...prev, msg])
     })
@@ -51,7 +53,8 @@ export default function Chat() {
       id: Math.random().toString(36).slice(2, 9),
       text,
       createdAt: Date.now(),
-      sender: 'Me',
+      sender: user?.userName || user?.email || 'Me',
+      senderId: user?._id || null,
       conversation: id,
       type,
     }

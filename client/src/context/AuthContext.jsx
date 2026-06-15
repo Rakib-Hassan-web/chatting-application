@@ -15,8 +15,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (payload) => {
     const res = await api.login(payload)
-    // server currently doesn't return user object; keep email locally
-    setUser({ email: payload.email })
+    const userData = res?.data?.data?.user || res?.data?.user || { email: payload.email }
+    setUser(userData)
     return res
   }
 

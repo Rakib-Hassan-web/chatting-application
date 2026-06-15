@@ -40,16 +40,19 @@ const Login = async (req, res) => {
     if (userData.isVerified === false)  return  sendError(res,"Email is not verified" ,400)
  
 
-    const matchPassword = await userData.comparePassword(password);
-    if (!matchPassword)
-      return sendError(res,"Invalid crediential" ,400)  
-    const accToken = generateAccessToken(userData);
-    const refToken = generateRefreshToken(userData);
-    res
-      .status(200)
-      .cookie("XS_TKN", accToken, cookie_config)
-      .cookie("RF_TKN", refToken, cookie_config)
-      .send({ message: "Login Successfylly" });
+    const matchPassword = await userData.comparePassword(password)
+    if (!matchPassword) return sendError(res, 'Invalid credential', 400)
+
+    const accToken = generateAccessToken(userData)
+    const refToken = generateRefreshToken(userData)
+
+    res.cookie('XS_TKN', accToken, cookie_config).cookie('RF_TKN', refToken, cookie_config)
+    return sendSuccess(
+      res,
+      'Login successful',
+      { user: { _id: userData._id, email: userData.email, userName: userData.userName } },
+      200,
+    )
   } catch (error) {
   
      sendError(res,"Internal Server Error" ,500)
