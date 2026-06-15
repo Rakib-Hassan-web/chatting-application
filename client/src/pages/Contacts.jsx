@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import * as api from '../api'
+import { useNavigate } from 'react-router-dom'
 
 export default function Contacts() {
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState(null)
   const [users, setUsers] = useState([])
+  const navigate = useNavigate()
 
   useEffect(() => {
     const load = async () => {
@@ -24,6 +26,8 @@ export default function Contacts() {
       const res = await api.addFriend({ email })
       setMessage(res.data.message || 'Friend added')
       setEmail('')
+      const conv = res.data.data
+      if (conv && conv._id) navigate(`/chat/dm/${conv._id}`)
     } catch (err) {
       setMessage(err.response?.data?.message || 'Failed')
     }
