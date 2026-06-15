@@ -46,7 +46,9 @@ export default function Contacts() {
       <ul className="user-list">
         {users.length === 0 && <li>No users available</li>}
         {users.map((u) => (
-          <li key={u._id}>{u.userName || u.email}</li>
+          <li key={u._id} className="user-item">
+            <button className="user-link" onClick={() => navigate(`/chat/dm/${u._id}`)}>{u.userName || u.email}</button>
+          </li>
         ))}
       </ul>
     </div>
